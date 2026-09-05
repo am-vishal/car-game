@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Car Game</title>
+    <link rel="stylesheet" href="styles.css">
+    <script defer src="https://use.fontawesome.com/releases/v5.15.4/js/all.js"
+        integrity="sha384-4oV5EgaVYlWuGzUpZsfLvjzR63fzKxhr5d6D8lFlQ6eMvqSz/AM/ZBAK2MuPvhN6"
+        crossorigin="anonymous"></script>
+</head>
+
+<body>
+    <div class="container">
+        <h1>Car Game</h1>
+        <div class="inputs">
+            <label for="mileage">Mileage per Liter:</label>
+            <input type="number" id="mileage" placeholder="Enter mileage per liter" value="10">
+            <label for="fuelPrice">Fuel Price per Liter:</label>
+            <input type="number" id="fuelPrice" placeholder="Enter fuel price per liter" value="100">
+            <label for="initialMoney">Initial Money (₹):</label>
+            <input type="number" id="initialMoney" placeholder="Enter initial money" value="1000">
+            <label for="destinationDistance">Destination Distance (km):</label>
+            <input type="number" id="destinationDistance" placeholder="Enter destination distance" value="10">
+        </div>
+        <button onclick="startGame()">Start Game</button>
+        <div id="gameOutput" class="game-output"></div>
+        <div class="road">
+            <div class="car"><i class="fas fa-car-side"></i></div>
+            <div class="line"></div>
+            <div class="pumps">
+                <i class="fas fa-gas-pump"></i>
+            </div>
+        </div>
+    </div>
+    <script>
+        // Define a function for the car game
+        const playCarGame = (mileagePerLiter, fuelPricePerLiter, initialMoney, pumpLocations, carMoveDistance, destinationDistance) => {
+            let remainingMoney = initialMoney;
+            let remainingFuel = 10; // in liters
+            let currentCarDistance = 0; // in kilometers
+            const pumps = pumpLocations;
+            const carMove = carMoveDistance ?? Math.floor(Math.random() * 7) + 1; // Random distance moved by the car (1-7 km)
+
+            // Function to check if car is at a pump
+            const isCarAtPump = () => pumps.includes(currentCarDistance);
+
+            // Function to add fuel at pump
+            const addFuelAtPump = () => {
+                // Calculate maximum fuel that can be added based on money
+                const maxFuelToAdd = Math.min(100 - remainingFuel, Math.floor(remainingMoney / fuelPricePerLiter));
+                // Calculate actual fuel to add based on maximum fuel and available money
+                const fuelToAdd = Math.min(maxFuelToAdd, 20); // Adding fuel up to a maximum of 20 liters
+                // Calculate cost of fuel
+                const fuelCost = fuelToAdd * fuelPricePerLiter;
+
+                // Check if user has enough money to add fuel
+                if (fuelToAdd > 0) {
+                    // Update remaining fuel and money
+                    remainingFuel += fuelToAdd;
+                    remainingMoney -= fuelCost;
+                    // Increase wallet balance by 10% of money spent on fuel
+                    remainingMoney += fuelCost * 0.1;
+
+                    // Ensure wallet balance does not go into negatives
+                    if (remainingMoney < 0) {
+                        remainingMoney = 0;
+                    }
+
+                    console.log("\n");
+                    document.getElementById('gameOutput').innerHTML += `
+                <p class="fuel-added">⛽ Fuel added: ${fuelToAdd.toFixed(2)} liters</p>
+                <p class="money-spent">💰 Money spent on fuel: ₹${fuelCost.toFixed(2)}</p>
+                <p class="wallet-balance">💰 Remaining money: ₹${remainingMoney.toFixed(2)}</p>
+            `;
+                    console.log("\n");
+                } else {
+                    console.log("\n");
+                    console.log("%cInsufficient funds to add fuel!", "color: red");
+                    console.log("\n");
+                }
+            }
+
+            // Main game loop
+            while (currentCarDistance < destinationDistance) {
+                // Move the car and update fuel
+                currentCarDistance += carMove;
+                remainingFuel -= carMove / mileagePerLiter; // Deduct fuel based on mileage
+                document.getElementById('gameOutput').innerHTML += `
+                <p class="current-distance">🚗 Current distance: ${currentCarDistance} km</p>
+                <p class="remaining-fuel">⛽ Remaining fuel: ${remainingFuel.toFixed(2)} liters</p>
+            `;
+
+                // Check if the car is at a pump
+                if (isCarAtPump()) {
+                    addFuelAtPump();
+                }
+
+                // Check if the car runs out of fuel
+                if (remainingFuel <= 0) {
+                    document.getElementById('gameOutput').innerHTML += `
+                    <p class="game-over">Game Over: Out of fuel</p>
+                `;
+                    break;
+                }
+
+                // Check if the car runs out of money
+                if (remainingMoney <= 0) {
+                    document.getElementById('gameOutput').innerHTML += `
+                    <p class="game-over">Game Over: Out of money</p>
+                `;
+                    break;
+                }
+            }
+
+            // Check if car has reached the destination
+            if (currentCarDistance >= destinationDistance) {
+                document.getElementById('gameOutput').innerHTML += `
+                <p class="congratulations">Congratulations! 🎉 You reached your destination!</p>
+            `;
+            }
+        }
+
+        // Function to start the game
+        function startGame() {
+            // Clear previous game output
+            document.getElementById('gameOutput').innerHTML = '';
+
+            // Get input values
+            let mileagePerLiter = parseFloat(document.getElementById('mileage').value);
+            let fuelPricePerLiter = parseFloat(document.getElementById('fuelPrice').value);
+            let initialMoney = parseFloat(document.getElementById('initialMoney').value);
+            let destinationDistance = parseFloat(document.getElementById('destinationDistance').value);
+
+            // Define global variables
+            let pumpLocations = [0, 4, 11, 17, 21, 22, 23, 24, 25, 26, 27, 28, 29, 31, 20, 30, 40, 50, 60];
+            let carMoveDistance = 10;
+
+            // Call the game function with input values
+            playCarGame(mileagePerLiter, fuelPricePerLiter, initialMoney, pumpLocations, carMoveDistance, destinationDistance);
+        }
+
+        // Add this JavaScript code after the existing code inside <script> tag
+
+        // Function to move the car
+        const moveCar = (distance) => {
+            const car = document.querySelector('.car');
+            const roadLength = document.querySelector('.road').clientWidth;
+            const carWidth = car.clientWidth;
+            const maxDistance = roadLength - carWidth;
+
+            if (distance <= maxDistance) {
+                car.style.transform = `translateX(${distance}px)`;
+            } else {
+                car.style.transform = `translateX(${maxDistance}px)`;
+            }
+        }
+
+        // Function to display messages
+        const displayMessage = (message) => {
+            document.getElementById('gameOutput').innerHTML += `<p>${message}</p>`;
+        }
+
+        // Modify the main game loop to include moving the car and displaying messages
+        while (currentCarDistance < destinationDistance) {
+            currentCarDistance += carMove;
+            moveCar(currentCarDistance); // Move the car
+
+            // Display message if the car is at a pump
+            if (isCarAtPump()) {
+                addFuelAtPump();
+                displayMessage('Reached a petrol pump!');
+            }
+
+            // Display message if the car reaches the destination
+            if (currentCarDistance >= destinationDistance) {
+                displayMessage('Reached the destination!');
+                break;
+            }
+        }
+
+    </script>
+</body>
+
+</html>
